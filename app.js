@@ -1,5 +1,7 @@
 import { upload } from 'https://esm.sh/@vercel/blob@0.24.1/client?bundle';
 
+let globalAudios = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
@@ -21,9 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             navigator.clipboard.writeText(text).then(() => {
                 const originalText = card.innerHTML;
                 card.innerHTML = '<span>copied!</span>';
-                setTimeout(() => {
-                    card.innerHTML = originalText;
-                }, 1500);
+                setTimeout(() => { card.innerHTML = originalText; }, 1500);
             });
         });
     });
@@ -37,14 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const status = document.getElementById('formStatus');
         
         status.innerText = "Sending request...";
-        
         try {
             const response = await fetch('/api/request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ request: text })
             });
-            
             if (response.ok) {
                 status.innerText = "Request sent successfully.";
                 requestForm.reset();
@@ -68,67 +66,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const uploadBtn = document.getElementById('uploadBtn');
     uploadBtn.addEventListener('click', async () => {
-        const fileInput = document.getElementById('audioFile');
+        const audioInput = document.getElementById('audioFile');
+        const coverInput = document.getElementById('coverFile');
         const titleInput = document.getElementById('audioTitle');
+        const tagsInput = document.getElementById('audioTags');
         const status = document.getElementById('uploadStatus');
-        
         const progressWrapper = document.getElementById('progressWrapper');
         const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
 
-        if (!fileInput.files[0] || !titleInput.value) {
-            status.innerText = "Please provide a file and a title.";
+        if (!audioInput.files[0] || !titleInput.value) {
+            status.innerText = "An audio file and title are required.";
             return;
         }
 
-        const file = fileInput.files[0];
-        const extName = file.name.substring(file.name.lastIndexOf('.'));
-        const finalName = titleInput.value + extName;
-
-        status.innerText = "Bypassing chunker, pushing file directly...";
+        const audioFile = audioInput.files[0];
+        const coverFile = coverInput.files[0];
         
+        const uploadId = Date.now();
+        const rawTags = tagsInput.value.trim() || 'untagged';
+        const encTags = encodeURIComponent(rawTags);
+        const encTitle = encodeURIComponent(titleInput.value.trim());
+
         progressWrapper.style.display = 'block';
-        progressText.style.display = 'block';
-        progressBar.style.width = '2%';
-        progressText.innerText = 'Connecting...';
-
-        // Simulated progress timer to visually bridge the gap for single-blast mobile uploads
-        let fakePercent = 2;
-        const progressTimer = setInterval(() => {
-            if (fakePercent < 95) {
-                fakePercent += Math.random() * 6; // Climbs naturally based on average mobile upload speeds
-                if (fakePercent > 95) fakePercent = 95;
-                progressBar.style.width = `${Math.floor(fakePercent)}%`;
-                progressText.innerText = `${Math.floor(fakePercent)}% Uploaded`;
-            }
-        }, 800);
-
+        progressBar.style.width = '10%';
+        
         try {
-            await upload(finalName, file, {
+            // STEP 1: Upload Cover (if provided)
+            if (coverFile) {
+                status.innerText = "Saving cover image...";
+                const coverExt = coverFile.name.substring(coverFile.name.lastIndexOf('.'));
+                const coverName = `cover__${uploadId}__${encTags}__${encTitle}${coverExt}`;
+                
+                await upload(coverName, coverFile, {
+                    access: 'public',
+                    handleUploadUrl: '/api/upload',
+                    clientPayload: adminPass.value.trim(),
+                    contentType: coverFile.type
+                });
+                progressBar.style.width = '30%';
+            }
+
+            // STEP 2: Upload Audio
+            status.innerText = "Pushing audio track... (Do not close tab or let screen sleep. This takes several minutes for large files.)";
+            progressBar.style.width = '50%'; // Visual indicator that it is actively on the heaviest step
+
+            const audioExt = audioFile.name.substring(audioFile.name.lastIndexOf('.'));
+            const audioName = `audio__${uploadId}__${encTags}__${encTitle}${audioExt}`;
+
+            await upload(audioName, audioFile, {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
                 clientPayload: adminPass.value.trim(),
-                contentType: file.type || 'audio/mp4' // Hardcodes the type so Vercel doesn't pause to scan it
+                contentType: audioFile.type || 'audio/mp4'
             });
 
-            clearInterval(progressTimer);
-            status.innerText = "Upload complete!";
             progressBar.style.width = '100%';
-            progressText.innerText = '100% Complete';
+            status.innerText = "Upload completely finished!";
             
             setTimeout(() => {
                 progressWrapper.style.display = 'none';
-                progressText.style.display = 'none';
             }, 3000);
             
             loadAudios(); 
             titleInput.value = '';
-            fileInput.value = '';
+            tagsInput.value = '';
+            audioInput.value = '';
+            if(coverInput) coverInput.value = '';
+
         } catch (error) {
-            clearInterval(progressTimer);
-            status.innerText = "Upload failed. " + error.message;
+            status.innerText = "Upload failed: " + error.message;
             progressWrapper.style.display = 'none';
-            progressText.style.display = 'none';
         }
     });
 });
@@ -138,28 +145,81 @@ async function loadAudios() {
     try {
         const response = await fetch('/api/audios', { cache: 'no-store' });
         if (response.ok) {
-            const data = await response.json();
-            container.innerHTML = '';
-            
-            if (data.length === 0) {
-                container.innerHTML = '<p class="loading-text">The archive is currently empty.</p>';
-                return;
-            }
-
-            data.forEach(audio => {
-                const div = document.createElement('div');
-                div.className = 'audio-item';
-                div.innerHTML = `
-                    <div class="audio-title">${audio.title}</div>
-                    <audio controls controlsList="nodownload">
-                        <source src="${audio.url}">
-                        Your browser does not support the audio element.
-                    </audio>
-                `;
-                container.appendChild(div);
-            });
+            globalAudios = await response.json();
+            renderFilters();
+            renderAudios('all');
         }
     } catch (error) {
         container.innerHTML = '<p class="loading-text">Unable to connect to archive.</p>';
     }
+}
+
+function renderFilters() {
+    const filterBar = document.getElementById('filterBar');
+    if (!filterBar) return;
+    
+    if (globalAudios.length === 0) {
+        filterBar.innerHTML = '';
+        return;
+    }
+
+    const tagsSet = new Set();
+    globalAudios.forEach(item => {
+        item.tags.forEach(t => {
+            if(t.toLowerCase() !== 'untagged') tagsSet.add(t.toLowerCase());
+        });
+    });
+
+    let html = `<button class="filter-pill active" data-tag="all">All</button>`;
+    tagsSet.forEach(tag => {
+        html += `<button class="filter-pill" data-tag="${tag}">${tag}</button>`;
+    });
+    
+    filterBar.innerHTML = html;
+
+    document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            renderAudios(e.target.dataset.tag);
+        });
+    });
+}
+
+function renderAudios(filterTag) {
+    const container = document.getElementById('audioContainer');
+    container.innerHTML = '';
+
+    const filtered = filterTag === 'all' 
+        ? globalAudios 
+        : globalAudios.filter(a => a.tags.map(t=>t.toLowerCase()).includes(filterTag));
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="loading-text">No audios found.</p>';
+        return;
+    }
+
+    filtered.forEach(audio => {
+        const div = document.createElement('div');
+        div.className = 'audio-item';
+        
+        let tagsHtml = audio.tags.filter(t => t !== 'untagged').map(t => `<span class="audio-tag">${t}</span>`).join('');
+        let coverHtml = audio.coverUrl 
+            ? `<img src="${audio.coverUrl}" class="audio-cover" alt="Cover">` 
+            : `<div class="audio-cover fallback-cover">❀</div>`;
+
+        div.innerHTML = `
+            <div class="audio-header">
+                ${coverHtml}
+                <div class="audio-info">
+                    <div class="audio-title">${audio.title}</div>
+                    <div class="audio-tags-container">${tagsHtml}</div>
+                </div>
+            </div>
+            <audio controls controlsList="nodownload">
+                <source src="${audio.audioUrl}">
+            </audio>
+        `;
+        container.appendChild(div);
+    });
 }
