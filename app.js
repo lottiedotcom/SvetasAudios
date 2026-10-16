@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
 
-    // Tab Navigation
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Kaomoji Copy Functionality
     const kaomojiCards = document.querySelectorAll('.kaomoji-card');
     kaomojiCards.forEach(card => {
         card.addEventListener('click', () => {
@@ -30,10 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Load Audios
     loadAudios();
 
-    // Anon Request Submission
     const requestForm = document.getElementById('requestForm');
     requestForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -60,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Admin Portal Logic
     const adminPass = document.getElementById('adminPass');
     const uploadSection = document.getElementById('uploadSection');
     
@@ -86,12 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        status.innerText = "Transferring to archive...";
+        status.innerText = "Transferring to archive (keep screen awake)...";
         
+        // Give the bar a tiny initial width so the shimmer animation is immediately visible
         progressWrapper.style.display = 'block';
         progressText.style.display = 'block';
-        progressBar.style.width = '0%';
-        progressText.innerText = '0%';
+        progressBar.style.width = '2%';
+        progressText.innerText = 'Preparing upload...';
 
         const file = fileInput.files[0];
         const extName = file.name.substring(file.name.lastIndexOf('.'));
@@ -102,25 +98,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
                 clientPayload: adminPass.value.trim(),
-                multipart: true, // Forces Vercel to split the file and report live progress
+                multipart: true, 
                 onUploadProgress: (event) => {
-                    // Ensures 0 doesn't get skipped and formats to a clean number
                     if (event.percentage !== undefined) {
-                        const percent = Math.round(event.percentage);
+                        const percent = Math.max(2, Math.round(event.percentage)); // Ensure it never visually drops below the 2% shimmer
                         progressBar.style.width = `${percent}%`;
-                        progressText.innerText = `${percent}%`;
+                        progressText.innerText = `${percent}% Uploaded`;
                     }
                 }
             });
 
             status.innerText = "Upload complete!";
             progressBar.style.width = '100%';
-            progressText.innerText = '100%';
+            progressText.innerText = '100% Complete';
             
             setTimeout(() => {
                 progressWrapper.style.display = 'none';
                 progressText.style.display = 'none';
-            }, 2000);
+            }, 3000);
             
             loadAudios(); 
             titleInput.value = '';
