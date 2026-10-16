@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadSection = document.getElementById('uploadSection');
     
     adminPass.addEventListener('input', () => {
-        // This is a basic frontend gate; actual security happens in the Vercel serverless function
         if (adminPass.value === 'sveta_admin_key') {
             uploadSection.style.display = 'block';
             adminPass.style.display = 'none';
@@ -129,7 +128,7 @@ async function loadAudios() {
                 div.innerHTML = `
                     <div class="audio-title">${audio.title}</div>
                     <audio controls controlsList="nodownload">
-                        <source src="${audio.url}" type="audio/mpeg">
+                        <source src="${audio.url}">
                         Your browser does not support the audio element.
                     </audio>
                 `;
