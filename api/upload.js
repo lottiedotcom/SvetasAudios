@@ -15,8 +15,7 @@ module.exports = async function handler(req, res) {
         
         let db = [];
         if (dbBlob) {
-            // Uses downloadUrl to securely read the private file
-            const dbRes = await fetch(dbBlob.downloadUrl || dbBlob.url);
+            const dbRes = await fetch(dbBlob.url);
             db = await dbRes.json();
         }
 
@@ -30,7 +29,7 @@ module.exports = async function handler(req, res) {
         db.unshift(newEntry);
 
         await put('sveta_db.json', JSON.stringify(db), {
-            access: 'private', // Matches your Vercel store's private setting
+            access: 'public', // Switched back to public
             addRandomSuffix: false,
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
