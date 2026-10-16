@@ -11,6 +11,7 @@ module.exports = async function handler(req, res) {
         const jsonResponse = await handleUpload({
             body,
             request: req,
+            token: process.env.BLOB_READ_WRITE_TOKEN, // Explicitly forces Vercel to use the database token
             onBeforeGenerateToken: async (pathname, clientPayload) => {
                 if (clientPayload !== process.env.UPLOAD_SECRET) {
                     throw new Error('Unauthorized - Check your password');
