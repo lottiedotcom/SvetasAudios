@@ -23,6 +23,7 @@
         <main class="content-area">
             <!-- Audio Archive Tab -->
             <section id="archive" class="tab-content active">
+                <div id="filterBar" class="filter-bar"></div>
                 <div class="audio-list" id="audioContainer">
                     <p class="loading-text">Loading archive...</p>
                 </div>
@@ -61,8 +62,16 @@
                     <h2>dont worry about it</h2>
                     <input type="password" id="adminPass" placeholder="Enter passphrase">
                     <div id="uploadSection" style="display: none; margin-top: 20px;">
+                        
+                        <label class="input-label">Audio Track</label>
                         <input type="file" id="audioFile" accept="audio/*,video/mp4,.m4a">
+                        
+                        <label class="input-label">Cover Image (Optional)</label>
+                        <input type="file" id="coverFile" accept="image/*">
+                        
                         <input type="text" id="audioTitle" placeholder="Audio Title">
+                        <input type="text" id="audioTags" placeholder="Tags (comma separated: sleep, rain)">
+                        
                         <button id="uploadBtn" class="submit-btn">Upload to Archive</button>
                         <p id="uploadStatus"></p>
                         
@@ -70,7 +79,6 @@
                         <div id="progressWrapper" class="progress-wrapper">
                             <div id="progressBar" class="progress-bar"></div>
                         </div>
-                        <p id="progressText" class="progress-text"></p>
                     </div>
                 </div>
             </section>
