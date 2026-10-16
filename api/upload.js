@@ -17,24 +17,36 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const form = formidable({});
+    const form = formidable({ multiples: false });
     form.parse(req, async (err, fields, files) => {
-        if (err) return res.status(500).json({ error: 'Form parsing error' });
+        if (err) {
+            return res.status(500).json({ error: 'Form parsing error' });
+        }
         
-        const file = files.file[0];
-        const title = fields.title[0];
-        const fileContent = fs.readFileSync(file.filepath);
-        
-        const ext = path.extname(file.originalFilename) || '.mp3';
-
         try {
-            const blob = await put(`${title}${ext}`, fileContent, {
+            // Safely handle arrays vs single items (depending on the Vercel node version)
+            const fileArray = files.file;
+            const file = Array.isArray(fileArray) ? fileArray[0] : fileArray;
+            
+            const titleArray = fields.title;
+            const title = Array.isArray(titleArray) ? titleArray[0] : titleArray;
+
+            if (!file) {
+                return res.status(400).json({ error: 'No file uploaded' });
+            }
+
+            const fileContent = fs.readFileSync(file.filepath);
+            const ext = path.extname(file.originalFilename || '') || '.mp3';
+            const filename = `${title}${ext}`;
+
+            const blob = await put(filename, fileContent, {
                 access: 'public',
-                contentType: file.mimetype
+                contentType: file.mimetype || 'audio/mpeg'
             });
-            res.status(200).json(blob);
+            
+            return res.status(200).json(blob);
         } catch (error) {
-            res.status(500).json({ error: 'Failed to upload to blob' });
+            return res.status(500).json({ error: 'Failed to upload to blob' });
         }
     });
 }
