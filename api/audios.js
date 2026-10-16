@@ -7,13 +7,16 @@ module.exports = async function handler(req, res) {
 
     try {
         const { blobs } = await list({
-            token: process.env.BLOB_READ_WRITE_TOKEN // Explicitly forces Vercel to use the database token
+            token: process.env.BLOB_READ_WRITE_TOKEN
         });
         
         const audios = blobs.map(blob => ({
             title: decodeURIComponent(blob.pathname.split('.')[0]),
             url: blob.url
         }));
+        
+        // This line strictly blocks Vercel from caching the empty feed
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         res.status(200).json(audios);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch archive' });
