@@ -81,31 +81,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        status.innerText = "Transferring to archive (keep screen awake)...";
+        status.innerText = "Transferring to archive...";
         
-        // Give the bar a tiny initial width so the shimmer animation is immediately visible
         progressWrapper.style.display = 'block';
         progressText.style.display = 'block';
         progressBar.style.width = '2%';
-        progressText.innerText = 'Preparing upload...';
+        progressText.innerText = 'Uploading...';
 
         const file = fileInput.files[0];
         const extName = file.name.substring(file.name.lastIndexOf('.'));
         const finalName = titleInput.value + extName;
 
         try {
+            // Removed 'multipart' to allow Vercel to auto-process small files instantly
             await upload(finalName, file, {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
-                clientPayload: adminPass.value.trim(),
-                multipart: true, 
-                onUploadProgress: (event) => {
-                    if (event.percentage !== undefined) {
-                        const percent = Math.max(2, Math.round(event.percentage)); // Ensure it never visually drops below the 2% shimmer
-                        progressBar.style.width = `${percent}%`;
-                        progressText.innerText = `${percent}% Uploaded`;
-                    }
-                }
+                clientPayload: adminPass.value.trim()
             });
 
             status.innerText = "Upload complete!";
