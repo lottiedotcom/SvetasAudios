@@ -110,20 +110,95 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Filter Bar */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--silk-border);
+}
+
+.filter-pill {
+    background: #fdfafb;
+    border: 1px solid var(--silk-border);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-family: sans-serif;
+    font-size: 0.85rem;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-pill:hover, .filter-pill.active {
+    background: var(--plum-accent);
+    color: #fff;
+    border-color: var(--plum-accent);
+}
+
+/* Audio Player & Covers */
 .audio-item {
-    margin-bottom: 25px;
-    padding-bottom: 25px;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
     border-bottom: 1px dashed var(--silk-border);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .audio-item:last-child {
     border-bottom: none;
 }
 
+.audio-header {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.audio-cover {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--silk-border);
+}
+
+.fallback-cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4eef1;
+    color: var(--plum-light);
+    font-size: 2rem;
+}
+
+.audio-info {
+    flex: 1;
+}
+
 .audio-title {
     font-size: 1.5rem;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     color: var(--plum-accent);
+}
+
+.audio-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.audio-tag {
+    background: #f4eef1;
+    color: var(--plum-light);
+    font-family: sans-serif;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: lowercase;
 }
 
 audio {
@@ -142,6 +217,7 @@ audio::-webkit-media-controls-mute-button {
     border-radius: 50%;
 }
 
+/* Forms */
 .form-container h2 {
     font-weight: normal;
     font-size: 2rem;
@@ -153,6 +229,15 @@ audio::-webkit-media-controls-mute-button {
     font-size: 1.1rem;
     color: #777;
     margin-bottom: 20px;
+}
+
+.input-label {
+    display: block;
+    text-align: left;
+    font-size: 1.1rem;
+    color: var(--plum-accent);
+    margin-bottom: 5px;
+    margin-top: 10px;
 }
 
 textarea, input[type="text"], input[type="password"], input[type="file"] {
@@ -187,6 +272,8 @@ textarea:focus, input:focus {
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.3s;
+    width: 100%;
+    margin-top: 10px;
 }
 
 .submit-btn:hover {
@@ -221,13 +308,12 @@ textarea:focus, input:focus {
     text-align: center;
 }
 
-/* Updated Progress Bar Styles */
 .progress-wrapper {
     width: 100%;
     height: 12px;
     background-color: var(--silk-border);
     border-radius: 6px;
-    margin-top: 15px;
+    margin-top: 20px;
     overflow: hidden;
     display: none; 
     position: relative;
@@ -242,7 +328,6 @@ textarea:focus, input:focus {
     overflow: hidden;
 }
 
-/* Shimmer Animation */
 .progress-bar::after {
     content: "";
     position: absolute;
@@ -254,12 +339,4 @@ textarea:focus, input:focus {
 @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
-}
-
-.progress-text {
-    font-size: 1rem;
-    color: #777;
-    margin-top: 8px;
-    display: none;
-    font-family: sans-serif; 
 }
