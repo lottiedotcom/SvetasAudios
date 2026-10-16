@@ -1,4 +1,4 @@
-import { upload } from 'https://esm.sh/@vercel/blob/client';
+import { upload } from 'https://esm.sh/@vercel/blob@0.24.1/client?bundle';
 
 document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tab-btn');
@@ -65,7 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadSection = document.getElementById('uploadSection');
     
     adminPass.addEventListener('input', () => {
-        if (adminPass.value === 'sveta_admin_key') {
+        // Trimming ensures accidental spaces on mobile don't break the password
+        if (adminPass.value.trim() === 'sveta_admin_key') {
             uploadSection.style.display = 'block';
             adminPass.style.display = 'none';
         }
@@ -92,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await upload(finalName, file, {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
-                clientPayload: adminPass.value // Passes the password securely to the token generator
+                clientPayload: adminPass.value.trim()
             });
 
             status.innerText = "Upload complete.";
