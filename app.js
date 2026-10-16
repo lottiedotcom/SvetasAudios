@@ -108,7 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadAudios() {
     const container = document.getElementById('audioContainer');
     try {
-        const response = await fetch('/api/audios');
+        // This is the updated line blocking the browser cache block
+        const response = await fetch('/api/audios', { cache: 'no-store' });
         if (response.ok) {
             const data = await response.json();
             container.innerHTML = '';
