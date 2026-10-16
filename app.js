@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadSection = document.getElementById('uploadSection');
     
     adminPass.addEventListener('input', () => {
-        // Trimming ensures accidental spaces on mobile don't break the password
         if (adminPass.value.trim() === 'sveta_admin_key') {
             uploadSection.style.display = 'block';
             adminPass.style.display = 'none';
