@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         status.innerText = "Transferring to archive...";
         
-        // Show progress elements and reset to 0
         progressWrapper.style.display = 'block';
         progressText.style.display = 'block';
         progressBar.style.width = '0%';
@@ -103,18 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
                 clientPayload: adminPass.value.trim(),
+                multipart: true, // Forces Vercel to split the file and report live progress
                 onUploadProgress: (event) => {
-                    // Update the visual bar and percentage text
-                    if (event.percentage) {
-                        progressBar.style.width = `${event.percentage}%`;
-                        progressText.innerText = `${event.percentage}%`;
+                    // Ensures 0 doesn't get skipped and formats to a clean number
+                    if (event.percentage !== undefined) {
+                        const percent = Math.round(event.percentage);
+                        progressBar.style.width = `${percent}%`;
+                        progressText.innerText = `${percent}%`;
                     }
                 }
             });
 
             status.innerText = "Upload complete!";
+            progressBar.style.width = '100%';
+            progressText.innerText = '100%';
             
-            // Hide progress bar shortly after finishing
             setTimeout(() => {
                 progressWrapper.style.display = 'none';
                 progressText.style.display = 'none';
