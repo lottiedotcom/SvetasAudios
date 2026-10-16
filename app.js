@@ -1,3 +1,5 @@
+import { upload } from 'https://esm.sh/@vercel/blob/client';
+
 document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
@@ -80,31 +82,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        status.innerText = "Uploading to archive...";
-        
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-        formData.append('title', titleInput.value);
+        status.innerText = "Uploading to archive (this may take a minute)...";
+
+        const file = fileInput.files[0];
+        // Grab the exact extension (.mp3, .m4a, etc) so it doesn't corrupt
+        const extName = file.name.substring(file.name.lastIndexOf('.'));
+        const finalName = titleInput.value + extName;
 
         try {
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                headers: {
-                    'Authorization': adminPass.value
-                },
-                body: formData
+            // Upload directly to Blob storage, bypassing the 4.5mb server limit
+            await upload(finalName, file, {
+                access: 'public',
+                handleUploadUrl: `/api/upload?secret=${encodeURIComponent(adminPass.value)}`
             });
 
-            if (response.ok) {
-                status.innerText = "Upload complete.";
-                loadAudios(); 
-                titleInput.value = '';
-                fileInput.value = '';
-            } else {
-                status.innerText = "Upload failed. Check authorization.";
-            }
+            status.innerText = "Upload complete.";
+            loadAudios(); 
+            titleInput.value = '';
+            fileInput.value = '';
         } catch (error) {
-            status.innerText = "Network error during upload.";
+            status.innerText = "Upload failed. " + error.message;
         }
     });
 });
