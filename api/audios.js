@@ -8,10 +8,11 @@ module.exports = async function handler(req, res) {
         const dbBlob = blobs.find(b => b.pathname === 'sveta_db.json');
         
         if (!dbBlob) {
-            return res.status(200).json([]); // Archive is empty
+            return res.status(200).json([]); // Archive is currently empty
         }
 
-        const dbRes = await fetch(dbBlob.url);
+        // Uses downloadUrl to securely read the private file
+        const dbRes = await fetch(dbBlob.downloadUrl || dbBlob.url);
         const db = await dbRes.json();
         
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
