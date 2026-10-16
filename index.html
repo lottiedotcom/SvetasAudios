@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sveta's Audio Archive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="blog-header">
+            <h1>Света</h1>
+            <p class="subtitle">Curated Audios & Reveries</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-target="archive">Archive</button>
+            <button class="tab-btn" data-target="requests">Requests</button>
+            <button class="tab-btn" data-target="kaomoji">Kaomoji</button>
+            <button class="tab-btn" data-target="portal">Portal</button>
+        </nav>
+
+        <main class="content-area">
+            <!-- Audio Archive Tab -->
+            <section id="archive" class="tab-content active">
+                <div class="audio-list" id="audioContainer">
+                    <!-- Audios will be injected here via JS -->
+                    <p class="loading-text">Loading archive...</p>
+                </div>
+            </section>
+
+            <!-- Anon Requests Tab -->
+            <section id="requests" class="tab-content">
+                <div class="form-container">
+                    <h2>Leave a Request</h2>
+                    <p class="form-desc">Submit your anonymous requests for new audios below.</p>
+                    <form id="requestForm">
+                        <textarea id="requestText" placeholder="Write your request here..." required></textarea>
+                        <button type="submit" class="submit-btn">Submit</button>
+                    </form>
+                    <p id="formStatus"></p>
+                </div>
+            </section>
+
+            <!-- Kaomoji Tab -->
+            <section id="kaomoji" class="tab-content">
+                <div class="kaomoji-grid">
+                    <div class="kaomoji-card"><span>( ˘͈ ᵕ ˘͈♡)</span></div>
+                    <div class="kaomoji-card"><span>(„• ֊ •„)</span></div>
+                    <div class="kaomoji-card"><span>(๑>◡<๑)</span></div>
+                    <div class="kaomoji-card"><span>૮ ˶ᵔ ᵕ ᵔ˶ ა</span></div>
+                    <div class="kaomoji-card"><span>( *¯ ³¯*)♡</span></div>
+                    <div class="kaomoji-card"><span>(⁄ ⁄•⁄ω⁄•⁄ ⁄)</span></div>
+                    <div class="kaomoji-card"><span>( ◡‿◡ *)</span></div>
+                    <div class="kaomoji-card"><span>(✿ ♡‿♡)</span></div>
+                </div>
+            </section>
+
+            <!-- Admin Portal -->
+            <section id="portal" class="tab-content">
+                <div class="form-container admin-container">
+                    <h2>Keeper's Portal</h2>
+                    <input type="password" id="adminPass" placeholder="Enter passphrase">
+                    <div id="uploadSection" style="display: none; margin-top: 20px;">
+                        <input type="file" id="audioFile" accept="audio/*">
+                        <input type="text" id="audioTitle" placeholder="Audio Title">
+                        <button id="uploadBtn" class="submit-btn">Upload to Archive</button>
+                        <p id="uploadStatus"></p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+                    </html>
+                      
