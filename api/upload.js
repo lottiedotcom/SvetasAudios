@@ -1,19 +1,45 @@
+const { put, list } = require('@vercel/blob');
+
 module.exports = async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: `Method ${req.method} Not Allowed.` });
-    }
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     try {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
         if (body.password !== process.env.UPLOAD_SECRET) {
-            return res.status(401).json({ error: 'Unauthorized - Incorrect passphrase.' });
+            return res.status(401).json({ error: 'Unauthorized - Incorrect password.' });
         }
 
-        // Securely hands the database key to your frontend so it can push natively
-        return res.status(200).json({ token: process.env.BLOB_READ_WRITE_TOKEN });
+        // 1. Fetch the existing database from Vercel
+        const { blobs } = await list({ token: process.env.BLOB_READ_WRITE_TOKEN });
+        const dbBlob = blobs.find(b => b.pathname === 'sveta_db.json');
+        
+        let db = [];
+        if (dbBlob) {
+            const dbRes = await fetch(dbBlob.url);
+            db = await dbRes.json();
+        }
+
+        // 2. Add your new Cloudinary tracks to the top of the feed
+        const newEntry = {
+            id: Date.now(),
+            title: body.title,
+            tags: body.tags.split(',').map(t => t.trim()).filter(t => t),
+            audioUrl: body.audioUrl,
+            coverUrl: body.coverUrl || null
+        };
+        db.unshift(newEntry);
+
+        // 3. Save the database instantly
+        await put('sveta_db.json', JSON.stringify(db), {
+            access: 'public',
+            addRandomSuffix: false, // Ensures it overwrites the master file
+            token: process.env.BLOB_READ_WRITE_TOKEN
+        });
+
+        return res.status(200).json({ success: true });
     } catch (error) {
-        console.error('Auth Error:', error);
-        return res.status(400).json({ error: 'Authentication request failed.' });
+        console.error('Database Error:', error);
+        return res.status(500).json({ error: 'Failed to update database: ' + error.message });
     }
 };
