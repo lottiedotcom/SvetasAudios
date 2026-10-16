@@ -86,14 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
         progressBar.style.width = '0%';
         progressText.innerText = '0%';
 
-        // Native function to stream files directly to your Cloudinary database
-        const pushToCloudinary = (file) => {
+        // Added 'prefix' to generate clean, system-safe filenames for Cloudinary
+        const pushToCloudinary = (file, prefix) => {
             return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
-                // Connects exactly to your Cloudinary Ysnggol9 account
                 xhr.open('POST', 'https://api.cloudinary.com/v1_1/Ysnggol9/auto/upload');
                 
-                // Tracks exact live bytes so the bar is 100% accurate
                 xhr.upload.onprogress = (e) => {
                     if (e.lengthComputable) {
                         const percent = Math.round((e.loaded / e.total) * 100);
@@ -105,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 xhr.onload = () => {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         const data = JSON.parse(xhr.responseText);
-                        resolve(data.secure_url); // Returns the permanent link
+                        resolve(data.secure_url);
                     } else {
                         reject(new Error('Cloudinary error: ' + xhr.responseText));
                     }
@@ -115,7 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const formData = new FormData();
                 formData.append('file', file);
-                formData.append('upload_preset', 'ml_default'); // Your secret door code
+                formData.append('upload_preset', 'ml_default');
+                // This completely prevents the special character crash
+                formData.append('public_id', `${prefix}_${Date.now()}`);
                 xhr.send(formData);
             });
         };
@@ -123,28 +123,25 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let coverUrl = null;
             
-            // 1. Upload Cover Image (if provided)
             if (coverFile) {
                 status.innerText = "Step 1/2: Saving cover image...";
-                coverUrl = await pushToCloudinary(coverFile);
+                coverUrl = await pushToCloudinary(coverFile, 'cover');
             }
 
-            // 2. Upload Heavy Audio File
             status.innerText = coverFile 
                 ? "Step 2/2: Pushing audio track (keep screen awake)..." 
                 : "Pushing audio track (keep screen awake)...";
             
-            progressBar.style.width = '0%'; // Reset bar for the heavy file
-            const audioUrl = await pushToCloudinary(audioFile);
+            progressBar.style.width = '0%'; 
+            const audioUrl = await pushToCloudinary(audioFile, 'audio');
 
-            // 3. Save Links to Vercel Database
             status.innerText = "Finalizing archive record...";
             const res = await fetch('/api/upload', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     password: adminPass.value.trim(),
-                    title: titleInput.value.trim(),
+                    title: titleInput.value.trim(), // Your beautiful symbols are saved here
                     tags: tagsInput.value.trim() || 'untagged',
                     audioUrl: audioUrl,
                     coverUrl: coverUrl
