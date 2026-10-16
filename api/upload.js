@@ -10,17 +10,16 @@ module.exports = async function handler(req, res) {
             return res.status(401).json({ error: 'Unauthorized - Incorrect password.' });
         }
 
-        // 1. Fetch the existing database from Vercel
         const { blobs } = await list({ token: process.env.BLOB_READ_WRITE_TOKEN });
         const dbBlob = blobs.find(b => b.pathname === 'sveta_db.json');
         
         let db = [];
         if (dbBlob) {
-            const dbRes = await fetch(dbBlob.url);
+            // Uses downloadUrl to securely read the private file
+            const dbRes = await fetch(dbBlob.downloadUrl || dbBlob.url);
             db = await dbRes.json();
         }
 
-        // 2. Add your new Cloudinary tracks to the top of the feed
         const newEntry = {
             id: Date.now(),
             title: body.title,
@@ -30,10 +29,9 @@ module.exports = async function handler(req, res) {
         };
         db.unshift(newEntry);
 
-        // 3. Save the database instantly
         await put('sveta_db.json', JSON.stringify(db), {
-            access: 'public',
-            addRandomSuffix: false, // Ensures it overwrites the master file
+            access: 'private', // Matches your Vercel store's private setting
+            addRandomSuffix: false,
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
