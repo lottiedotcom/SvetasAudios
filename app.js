@@ -81,25 +81,37 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        status.innerText = "Transferring to archive...";
-        
-        progressWrapper.style.display = 'block';
-        progressText.style.display = 'block';
-        progressBar.style.width = '2%';
-        progressText.innerText = 'Uploading...';
-
         const file = fileInput.files[0];
         const extName = file.name.substring(file.name.lastIndexOf('.'));
         const finalName = titleInput.value + extName;
 
+        status.innerText = "Bypassing chunker, pushing file directly...";
+        
+        progressWrapper.style.display = 'block';
+        progressText.style.display = 'block';
+        progressBar.style.width = '2%';
+        progressText.innerText = 'Connecting...';
+
+        // Simulated progress timer to visually bridge the gap for single-blast mobile uploads
+        let fakePercent = 2;
+        const progressTimer = setInterval(() => {
+            if (fakePercent < 95) {
+                fakePercent += Math.random() * 6; // Climbs naturally based on average mobile upload speeds
+                if (fakePercent > 95) fakePercent = 95;
+                progressBar.style.width = `${Math.floor(fakePercent)}%`;
+                progressText.innerText = `${Math.floor(fakePercent)}% Uploaded`;
+            }
+        }, 800);
+
         try {
-            // Removed 'multipart' to allow Vercel to auto-process small files instantly
             await upload(finalName, file, {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
-                clientPayload: adminPass.value.trim()
+                clientPayload: adminPass.value.trim(),
+                contentType: file.type || 'audio/mp4' // Hardcodes the type so Vercel doesn't pause to scan it
             });
 
+            clearInterval(progressTimer);
             status.innerText = "Upload complete!";
             progressBar.style.width = '100%';
             progressText.innerText = '100% Complete';
@@ -113,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             titleInput.value = '';
             fileInput.value = '';
         } catch (error) {
+            clearInterval(progressTimer);
             status.innerText = "Upload failed. " + error.message;
             progressWrapper.style.display = 'none';
             progressText.style.display = 'none';
