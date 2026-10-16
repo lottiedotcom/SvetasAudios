@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const status = document.getElementById('uploadStatus');
         const progressWrapper = document.getElementById('progressWrapper');
         const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
 
         if (!audioInput.files[0] || !titleInput.value) {
             status.innerText = "An audio file and title are required.";
@@ -79,66 +80,90 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const audioFile = audioInput.files[0];
         const coverFile = coverInput.files[0];
-        
-        const uploadId = Date.now();
-        const rawTags = tagsInput.value.trim() || 'untagged';
-        const encTags = encodeURIComponent(rawTags);
-        const encTitle = encodeURIComponent(titleInput.value.trim());
 
-        status.innerText = "Authenticating connection...";
         progressWrapper.style.display = 'block';
-        progressBar.style.width = '10%';
+        progressText.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressText.innerText = '0%';
+
+        // Native function to stream files directly to your Cloudinary database
+        const pushToCloudinary = (file) => {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                // Connects exactly to your Cloudinary Ysnggol9 account
+                xhr.open('POST', 'https://api.cloudinary.com/v1_1/Ysnggol9/auto/upload');
+                
+                // Tracks exact live bytes so the bar is 100% accurate
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = `${percent}%`;
+                        progressText.innerText = `${percent}% Uploaded`;
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        const data = JSON.parse(xhr.responseText);
+                        resolve(data.secure_url); // Returns the permanent link
+                    } else {
+                        reject(new Error('Cloudinary error: ' + xhr.responseText));
+                    }
+                };
+                
+                xhr.onerror = () => reject(new Error('Network error uploading to Cloudinary'));
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', 'ml_default'); // Your secret door code
+                xhr.send(formData);
+            });
+        };
 
         try {
-            // STEP 1: Get secure token natively
-            const authRes = await fetch('/api/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: adminPass.value.trim() })
-            });
-
-            if (!authRes.ok) throw new Error('Authentication failed.');
-            const { token } = await authRes.json();
-
-            status.innerText = "Pushing files to database (keep screen awake)...";
-            progressBar.style.width = '30%';
-
-            // Helper for native, library-free uploads
-            const pushToBlob = async (file, name) => {
-                const res = await fetch(`https://blob.vercel-storage.com?pathname=${encodeURIComponent(name)}`, {
-                    method: 'PUT',
-                    headers: {
-                        'authorization': `Bearer ${token}`,
-                        'x-api-version': '7',
-                        'x-content-type': file.type || 'application/octet-stream'
-                    },
-                    body: file
-                });
-                if (!res.ok) throw new Error(`Failed to upload ${name}`);
-                return res.json();
-            };
-
-            const uploadTasks = [];
-
-            // Queue Cover
+            let coverUrl = null;
+            
+            // 1. Upload Cover Image (if provided)
             if (coverFile) {
-                const coverExt = coverFile.name.substring(coverFile.name.lastIndexOf('.'));
-                const coverName = `cover__${uploadId}__${encTags}__${encTitle}${coverExt}`;
-                uploadTasks.push(pushToBlob(coverFile, coverName));
+                status.innerText = "Step 1/2: Saving cover image...";
+                coverUrl = await pushToCloudinary(coverFile);
             }
 
-            // Queue Audio
-            const audioExt = audioFile.name.substring(audioFile.name.lastIndexOf('.'));
-            const audioName = `audio__${uploadId}__${encTags}__${encTitle}${audioExt}`;
-            uploadTasks.push(pushToBlob(audioFile, audioName));
-
-            // Execute raw upload stream
-            await Promise.all(uploadTasks);
-
-            progressBar.style.width = '100%';
-            status.innerText = "Upload completely finished!";
+            // 2. Upload Heavy Audio File
+            status.innerText = coverFile 
+                ? "Step 2/2: Pushing audio track (keep screen awake)..." 
+                : "Pushing audio track (keep screen awake)...";
             
-            setTimeout(() => { progressWrapper.style.display = 'none'; }, 3000);
+            progressBar.style.width = '0%'; // Reset bar for the heavy file
+            const audioUrl = await pushToCloudinary(audioFile);
+
+            // 3. Save Links to Vercel Database
+            status.innerText = "Finalizing archive record...";
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    password: adminPass.value.trim(),
+                    title: titleInput.value.trim(),
+                    tags: tagsInput.value.trim() || 'untagged',
+                    audioUrl: audioUrl,
+                    coverUrl: coverUrl
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || 'Failed to save to database');
+            }
+
+            status.innerText = "Upload completely finished!";
+            progressBar.style.width = '100%';
+            progressText.innerText = 'Complete';
+            
+            setTimeout(() => {
+                progressWrapper.style.display = 'none';
+                progressText.style.display = 'none';
+            }, 3000);
             
             loadAudios(); 
             titleInput.value = '';
@@ -149,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             status.innerText = "Upload failed: " + error.message;
             progressWrapper.style.display = 'none';
+            progressText.style.display = 'none';
         }
     });
 });
