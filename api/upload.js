@@ -25,7 +25,6 @@ export default async function handler(req, res) {
         const title = fields.title[0];
         const fileContent = fs.readFileSync(file.filepath);
         
-        // This grabs the actual extension (.m4a, .mp4, etc) instead of forcing .mp3
         const ext = path.extname(file.originalFilename) || '.mp3';
 
         try {
