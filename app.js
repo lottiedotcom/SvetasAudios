@@ -85,15 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
         status.innerText = "Uploading to archive (this may take a minute)...";
 
         const file = fileInput.files[0];
-        // Grab the exact extension (.mp3, .m4a, etc) so it doesn't corrupt
         const extName = file.name.substring(file.name.lastIndexOf('.'));
         const finalName = titleInput.value + extName;
 
         try {
-            // Upload directly to Blob storage, bypassing the 4.5mb server limit
             await upload(finalName, file, {
                 access: 'public',
-                handleUploadUrl: `/api/upload?secret=${encodeURIComponent(adminPass.value)}`
+                handleUploadUrl: '/api/upload',
+                clientPayload: adminPass.value // Passes the password securely to the token generator
             });
 
             status.innerText = "Upload complete.";
