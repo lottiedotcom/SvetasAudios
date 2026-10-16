@@ -76,13 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileInput = document.getElementById('audioFile');
         const titleInput = document.getElementById('audioTitle');
         const status = document.getElementById('uploadStatus');
+        
+        const progressWrapper = document.getElementById('progressWrapper');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
 
         if (!fileInput.files[0] || !titleInput.value) {
             status.innerText = "Please provide a file and a title.";
             return;
         }
 
-        status.innerText = "Uploading to archive (this may take a minute)...";
+        status.innerText = "Transferring to archive...";
+        
+        // Show progress elements and reset to 0
+        progressWrapper.style.display = 'block';
+        progressText.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressText.innerText = '0%';
 
         const file = fileInput.files[0];
         const extName = file.name.substring(file.name.lastIndexOf('.'));
@@ -92,15 +102,31 @@ document.addEventListener('DOMContentLoaded', () => {
             await upload(finalName, file, {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
-                clientPayload: adminPass.value.trim()
+                clientPayload: adminPass.value.trim(),
+                onUploadProgress: (event) => {
+                    // Update the visual bar and percentage text
+                    if (event.percentage) {
+                        progressBar.style.width = `${event.percentage}%`;
+                        progressText.innerText = `${event.percentage}%`;
+                    }
+                }
             });
 
-            status.innerText = "Upload complete.";
+            status.innerText = "Upload complete!";
+            
+            // Hide progress bar shortly after finishing
+            setTimeout(() => {
+                progressWrapper.style.display = 'none';
+                progressText.style.display = 'none';
+            }, 2000);
+            
             loadAudios(); 
             titleInput.value = '';
             fileInput.value = '';
         } catch (error) {
             status.innerText = "Upload failed. " + error.message;
+            progressWrapper.style.display = 'none';
+            progressText.style.display = 'none';
         }
     });
 });
@@ -108,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadAudios() {
     const container = document.getElementById('audioContainer');
     try {
-        // This is the updated line blocking the browser cache block
         const response = await fetch('/api/audios', { cache: 'no-store' });
         if (response.ok) {
             const data = await response.json();
