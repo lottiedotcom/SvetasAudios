@@ -12,7 +12,6 @@ module.exports = async function handler(req, res) {
         
         const itemsMap = {};
 
-        // Parse the grouped filenames to match covers to audios
         blobs.forEach(blob => {
             const parts = blob.pathname.split('__');
             if (parts.length >= 4) {
@@ -38,7 +37,6 @@ module.exports = async function handler(req, res) {
             }
         });
 
-        // Filter out incomplete uploads and sort newest first
         const audios = Object.values(itemsMap).filter(item => item.audioUrl).sort((a, b) => b.id - a.id);
         
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
