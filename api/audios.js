@@ -6,7 +6,10 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        const { blobs } = await list();
+        const { blobs } = await list({
+            token: process.env.BLOB_READ_WRITE_TOKEN // Explicitly forces Vercel to use the database token
+        });
+        
         const audios = blobs.map(blob => ({
             title: decodeURIComponent(blob.pathname.split('.')[0]),
             url: blob.url
