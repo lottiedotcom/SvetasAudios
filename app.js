@@ -3,7 +3,7 @@ let isAdminUnlocked = false;
 let activeAdminPass = '';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // SKELETON KEY LOGIC: Checks if the URL contains ?kee
+
     const urlParams = new URLSearchParams(window.location.search);
     const portalTabBtn = document.getElementById('portalTabBtn');
     if (urlParams.has('kee')) {
@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Audio Upload
     const uploadBtn = document.getElementById('uploadBtn');
     uploadBtn.addEventListener('click', async () => {
         const audioInput = document.getElementById('audioFile');
