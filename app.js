@@ -3,6 +3,13 @@ let isAdminUnlocked = false;
 let activeAdminPass = '';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // SKELETON KEY LOGIC: Checks if the URL contains ?kee
+    const urlParams = new URLSearchParams(window.location.search);
+    const portalTabBtn = document.getElementById('portalTabBtn');
+    if (urlParams.has('kee')) {
+        portalTabBtn.style.display = 'block';
+    }
+
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
 
@@ -54,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             activeAdminPass = adminPass.value.trim();
             const currentFilter = document.querySelector('.filter-pill.active')?.dataset.tag || 'all';
             renderAudios(currentFilter);
-            loadDiary(); // Re-render diary to show any potential admin controls in the future
+            loadDiary(); 
         }
     });
 
