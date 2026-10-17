@@ -17,7 +17,12 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    background: linear-gradient(135deg, var(--bg-color) 0%, #f4eef1 100%);
+    /* Replaced the solid gradient with your image file */
+    background-image: url('background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    
     font-family: 'Perfect Moment', cursive, sans-serif;
     color: var(--text-main);
     min-height: 100vh;
