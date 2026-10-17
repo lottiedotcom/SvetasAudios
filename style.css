@@ -11,7 +11,7 @@
     --plum-accent: #5e2142;
     --plum-light: #8a3a66;
     --silk-border: rgba(235, 220, 226, 0.4); 
-    --card-bg: rgba(255, 255, 255, 0.15); /* Exactly 5% solid white */
+    --card-bg: rgba(224, 246, 255, 0.15); /* Exactly 5% solid white */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
