@@ -10,8 +10,8 @@
     --text-main: #2b2b2b;
     --plum-accent: #5e2142;
     --plum-light: #8a3a66;
-    --silk-border: rgba(235, 220, 226, 0.6);
-    --card-bg: rgba(255, 255, 255, 0.95); /* 95% solid, 5% transparent */
+    --silk-border: rgba(235, 220, 226, 0.4); 
+    --card-bg: rgba(255, 255, 255, 0.05); /* Exactly 5% solid white */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,14 +34,14 @@ body {
     width: 100%; max-width: 700px; background: var(--card-bg);
     border: 1px solid var(--silk-border); border-radius: 12px;
     box-shadow: 0 10px 30px rgba(94, 33, 66, 0.05); overflow: hidden; margin-top: 40px; margin-bottom: 40px;
-    backdrop-filter: blur(2px); /* Adds a slight blur to the background showing through */
+    backdrop-filter: blur(4px); /* Adds a slight glass blur so text remains readable */
 }
 
 .blog-header { text-align: center; padding: 50px 20px 30px; border-bottom: 1px solid var(--silk-border); }
 .blog-header h1 { font-size: 3.5rem; font-weight: normal; color: var(--plum-accent); letter-spacing: 2px; margin-bottom: 5px; }
 .subtitle { color: #888; font-size: 1.2rem; }
 
-.tabs { display: flex; background: rgba(250, 247, 248, 0.95); border-bottom: 1px solid var(--silk-border); }
+.tabs { display: flex; background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid var(--silk-border); }
 .tab-btn {
     flex: 1; background: none; border: none; padding: 15px 0;
     font-family: 'Perfect Moment', cursive, sans-serif; font-size: 1.1rem;
@@ -59,7 +59,7 @@ body {
 /* Filter Bar */
 .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--silk-border); }
 .filter-pill {
-    background: rgba(253, 250, 251, 0.95); border: 1px solid var(--silk-border); padding: 5px 15px; border-radius: 20px;
+    background: rgba(255, 255, 255, 0.15); border: 1px solid var(--silk-border); padding: 5px 15px; border-radius: 20px;
     font-family: sans-serif; font-size: 0.85rem; color: #666; cursor: pointer; transition: all 0.2s;
 }
 .filter-pill:hover, .filter-pill.active { background: var(--plum-accent); color: #fff; border-color: var(--plum-accent); }
@@ -69,15 +69,15 @@ body {
 .audio-item:last-child { border-bottom: none; }
 .audio-header { display: flex; gap: 20px; align-items: center; }
 .audio-cover { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--silk-border); }
-.fallback-cover { display: flex; align-items: center; justify-content: center; background: rgba(244, 238, 241, 0.95); color: var(--plum-light); font-size: 2rem; }
+.fallback-cover { display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.15); color: var(--plum-light); font-size: 2rem; }
 .audio-info { flex: 1; }
 .audio-title { font-size: 1.5rem; margin-bottom: 8px; color: var(--plum-accent); }
 .audio-tags-container { display: flex; flex-wrap: wrap; gap: 6px; }
 .audio-tag {
-    background: rgba(244, 238, 241, 0.95); color: var(--plum-light); font-family: sans-serif; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; text-transform: lowercase;
+    background: rgba(255, 255, 255, 0.2); color: var(--plum-light); font-family: sans-serif; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; text-transform: lowercase;
 }
 audio { width: 100%; height: 35px; outline: none; }
-audio::-webkit-media-controls-panel { background-color: rgba(244, 238, 241, 0.95); }
+audio::-webkit-media-controls-panel { background-color: rgba(255, 255, 255, 0.15); }
 audio::-webkit-media-controls-play-button, audio::-webkit-media-controls-mute-button { background-color: #e5d5dc; border-radius: 50%; }
 
 /* Forms */
@@ -87,7 +87,7 @@ audio::-webkit-media-controls-play-button, audio::-webkit-media-controls-mute-bu
 
 textarea, input[type="text"], input[type="password"], input[type="file"] {
     width: 100%; padding: 15px; border: 1px solid var(--silk-border); border-radius: 6px;
-    font-family: 'Perfect Moment', cursive, sans-serif; font-size: 1.2rem; margin-bottom: 15px; background: rgba(253, 250, 251, 0.95); outline: none; transition: border 0.3s;
+    font-family: 'Perfect Moment', cursive, sans-serif; font-size: 1.2rem; margin-bottom: 15px; background: rgba(255, 255, 255, 0.15); outline: none; transition: border 0.3s;
 }
 textarea { resize: vertical; min-height: 120px; }
 textarea:focus, input:focus { border-color: var(--plum-light); }
@@ -112,7 +112,7 @@ textarea:focus, input:focus { border-color: var(--plum-light); }
 /* Admin Controls & Modal Styles */
 .admin-controls { display: flex; gap: 10px; margin-top: 10px; }
 .admin-btn {
-    background: rgba(244, 238, 241, 0.95); color: var(--plum-accent); border: 1px solid var(--silk-border);
+    background: rgba(255, 255, 255, 0.15); color: var(--plum-accent); border: 1px solid var(--silk-border);
     padding: 6px 12px; border-radius: 4px; font-family: sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
 }
 .admin-btn:hover { background: var(--plum-accent); color: #fff; border-color: var(--plum-accent); }
@@ -123,13 +123,14 @@ textarea:focus, input:focus { border-color: var(--plum-light); }
 }
 .modal-content {
     background: var(--card-bg); padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid var(--silk-border); box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    backdrop-filter: blur(4px);
 }
 .modal-buttons { display: flex; gap: 10px; margin-top: 5px; }
 .cancel-btn {
-    background: rgba(229, 213, 220, 0.95); color: var(--text-main); border: none; padding: 12px 25px;
+    background: rgba(229, 213, 220, 0.6); color: var(--text-main); border: none; padding: 12px 25px;
     font-family: 'Perfect Moment', cursive, sans-serif; font-size: 1.2rem; border-radius: 6px; cursor: pointer; flex: 1; transition: background 0.3s; margin-top: 10px;
 }
-.cancel-btn:hover { background: #d4c0c9; }
+.cancel-btn:hover { background: rgba(212, 192, 201, 0.8); }
 
 /* Zine Shelf & Diary */
 .section-title { font-size: 1.8rem; color: var(--plum-accent); font-weight: normal; margin-bottom: 20px; }
@@ -148,7 +149,7 @@ textarea:focus, input:focus { border-color: var(--plum-light); }
 
 .diary-list { display: flex; flex-direction: column; gap: 30px; }
 .diary-entry {
-    background: rgba(253, 250, 251, 0.95); padding: 25px; border-radius: 8px; border: 1px solid var(--silk-border);
+    background: rgba(255, 255, 255, 0.15); padding: 25px; border-radius: 8px; border: 1px solid var(--silk-border);
     position: relative;
 }
 .diary-date {
