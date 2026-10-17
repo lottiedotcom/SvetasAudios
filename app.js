@@ -2,31 +2,33 @@ let globalAudios = [];
 let isAdminUnlocked = false;
 let activeAdminPass = '';
 
-document.addEventListener('DOMContentLoaded', () => {
+// SKELETON KEY LOGIC: Checks if the URL contains ?kee
+const urlParams = new URLSearchParams(window.location.search);
+const portalTabBtn = document.getElementById('portalTabBtn');
+if (portalTabBtn && urlParams.has('kee')) {
+    portalTabBtn.style.display = 'block';
+}
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const portalTabBtn = document.getElementById('portalTabBtn');
-    if (urlParams.has('kee')) {
-        portalTabBtn.style.display = 'block';
-    }
+const tabs = document.querySelectorAll('.tab-btn');
+const contents = document.querySelectorAll('.tab-content');
 
-    const tabs = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
 
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            contents.forEach(c => c.classList.remove('active'));
-
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.target).classList.add('active');
-        });
+        tab.classList.add('active');
+        const target = document.getElementById(tab.dataset.target);
+        if(target) target.classList.add('active');
     });
+});
 
-    loadAudios();
-    loadDiary();
+// Force load instantly without waiting for DOM locks
+loadAudios();
+loadDiary();
 
-    const requestForm = document.getElementById('requestForm');
+const requestForm = document.getElementById('requestForm');
+if(requestForm) {
     requestForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = document.getElementById('requestText').value;
@@ -49,10 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
             status.innerText = "Error connecting to server.";
         }
     });
+}
 
-    const adminPass = document.getElementById('adminPass');
-    const uploadSection = document.getElementById('uploadSection');
-    
+const adminPass = document.getElementById('adminPass');
+const uploadSection = document.getElementById('uploadSection');
+
+if(adminPass) {
     adminPass.addEventListener('input', () => {
         if (adminPass.value.trim() === 'sveta_admin_key') {
             uploadSection.style.display = 'block';
@@ -64,8 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
             loadDiary(); 
         }
     });
+}
 
-    const uploadBtn = document.getElementById('uploadBtn');
+const uploadBtn = document.getElementById('uploadBtn');
+if(uploadBtn) {
     uploadBtn.addEventListener('click', async () => {
         const audioInput = document.getElementById('audioFile');
         const coverInput = document.getElementById('coverFile');
@@ -167,9 +173,10 @@ document.addEventListener('DOMContentLoaded', () => {
             progressText.style.display = 'none';
         }
     });
+}
 
-    // Diary Post
-    const postDiaryBtn = document.getElementById('postDiaryBtn');
+const postDiaryBtn = document.getElementById('postDiaryBtn');
+if(postDiaryBtn) {
     postDiaryBtn.addEventListener('click', async () => {
         const textInput = document.getElementById('diaryInput');
         const status = document.getElementById('diaryStatus');
@@ -202,14 +209,20 @@ document.addEventListener('DOMContentLoaded', () => {
             status.innerText = "Publish failed.";
         }
     });
+}
 
-    // Modal Controls
-    const editModal = document.getElementById('editModal');
-    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+const editModal = document.getElementById('editModal');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const saveEditBtn = document.getElementById('saveEditBtn');
+
+if(cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', () => {
         editModal.style.display = 'none';
     });
+}
 
-    document.getElementById('saveEditBtn').addEventListener('click', async () => {
+if(saveEditBtn) {
+    saveEditBtn.addEventListener('click', async () => {
         const id = document.getElementById('editId').value;
         const newTitle = document.getElementById('editTitle').value;
         const newTags = document.getElementById('editTags').value;
@@ -232,10 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
             status.innerText = "Error saving.";
         }
     });
-});
+}
 
 async function loadAudios() {
     const container = document.getElementById('audioContainer');
+    if(!container) return;
     try {
         const response = await fetch('/api/audios', { cache: 'no-store' });
         if (response.ok) {
@@ -250,6 +264,7 @@ async function loadAudios() {
 
 async function loadDiary() {
     const container = document.getElementById('diaryContainer');
+    if(!container) return;
     try {
         const response = await fetch('/api/diary', { cache: 'no-store' });
         if (response.ok) {
@@ -296,6 +311,7 @@ function renderFilters() {
 
 function renderAudios(filterTag) {
     const container = document.getElementById('audioContainer');
+    if(!container) return;
     container.innerHTML = '';
     const filtered = filterTag === 'all' ? globalAudios : globalAudios.filter(a => a.tags.map(t=>t.toLowerCase()).includes(filterTag));
 
