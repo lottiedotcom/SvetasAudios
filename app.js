@@ -16,19 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const kaomojiCards = document.querySelectorAll('.kaomoji-card');
-    kaomojiCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const text = card.innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = card.innerHTML;
-                card.innerHTML = '<span>copied!</span>';
-                setTimeout(() => { card.innerHTML = originalText; }, 1500);
-            });
-        });
-    });
-
     loadAudios();
+    loadDiary();
 
     const requestForm = document.getElementById('requestForm');
     requestForm.addEventListener('submit', async (e) => {
@@ -54,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Portal Unlock & Admin Status
     const adminPass = document.getElementById('adminPass');
     const uploadSection = document.getElementById('uploadSection');
     
@@ -64,12 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
             adminPass.style.display = 'none';
             isAdminUnlocked = true;
             activeAdminPass = adminPass.value.trim();
-            // Re-render feed to reveal edit/delete buttons
             const currentFilter = document.querySelector('.filter-pill.active')?.dataset.tag || 'all';
             renderAudios(currentFilter);
+            loadDiary(); // Re-render diary to show any potential admin controls in the future
         }
     });
 
+    // Audio Upload
     const uploadBtn = document.getElementById('uploadBtn');
     uploadBtn.addEventListener('click', async () => {
         const audioInput = document.getElementById('audioFile');
@@ -112,10 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const data = JSON.parse(xhr.responseText);
                         resolve(data.secure_url);
                     } else {
-                        reject(new Error('Cloudinary error: ' + xhr.responseText));
+                        reject(new Error('Cloudinary error'));
                     }
                 };
-                
                 xhr.onerror = () => reject(new Error('Network error'));
 
                 const formData = new FormData();
@@ -174,42 +162,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Modal Editing Logic
+    // Diary Post
+    const postDiaryBtn = document.getElementById('postDiaryBtn');
+    postDiaryBtn.addEventListener('click', async () => {
+        const textInput = document.getElementById('diaryInput');
+        const status = document.getElementById('diaryStatus');
+        
+        if (!textInput.value.trim()) {
+            status.innerText = "Entry cannot be empty.";
+            return;
+        }
+
+        status.innerText = "Publishing entry...";
+
+        try {
+            const res = await fetch('/api/diary-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    password: activeAdminPass,
+                    text: textInput.value
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to post');
+            
+            status.innerText = "Published successfully!";
+            textInput.value = '';
+            loadDiary();
+            
+            setTimeout(() => { status.innerText = ''; }, 3000);
+        } catch (error) {
+            status.innerText = "Publish failed.";
+        }
+    });
+
+    // Modal Controls
     const editModal = document.getElementById('editModal');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    const saveEditBtn = document.getElementById('saveEditBtn');
-    
-    cancelEditBtn.addEventListener('click', () => {
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
         editModal.style.display = 'none';
     });
 
-    saveEditBtn.addEventListener('click', async () => {
+    document.getElementById('saveEditBtn').addEventListener('click', async () => {
         const id = document.getElementById('editId').value;
         const newTitle = document.getElementById('editTitle').value;
         const newTags = document.getElementById('editTags').value;
         const status = document.getElementById('editStatus');
 
         status.innerText = "Saving changes...";
-
         try {
             const res = await fetch('/api/edit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    password: activeAdminPass,
-                    id: parseInt(id),
-                    title: newTitle,
-                    tags: newTags
-                })
+                body: JSON.stringify({ password: activeAdminPass, id: parseInt(id), title: newTitle, tags: newTags })
             });
 
-            if (!res.ok) throw new Error("Failed to edit track");
+            if (!res.ok) throw new Error("Failed to edit");
 
             editModal.style.display = 'none';
             status.innerText = "";
             loadAudios();
         } catch (error) {
-            status.innerText = "Error: " + error.message;
+            status.innerText = "Error saving.";
         }
     });
 });
@@ -228,27 +242,41 @@ async function loadAudios() {
     }
 }
 
+async function loadDiary() {
+    const container = document.getElementById('diaryContainer');
+    try {
+        const response = await fetch('/api/diary', { cache: 'no-store' });
+        if (response.ok) {
+            const entries = await response.json();
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="loading-text">No diary entries yet.</p>';
+                return;
+            }
+            
+            container.innerHTML = entries.map(entry => `
+                <div class="diary-entry">
+                    <div class="diary-date">${entry.date}</div>
+                    <div class="diary-text">${entry.text.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        container.innerHTML = '<p class="loading-text">Unable to load diary.</p>';
+    }
+}
+
 function renderFilters() {
     const filterBar = document.getElementById('filterBar');
     if (!filterBar) return;
-    
-    if (globalAudios.length === 0) {
-        filterBar.innerHTML = '';
-        return;
-    }
+    if (globalAudios.length === 0) { filterBar.innerHTML = ''; return; }
 
     const tagsSet = new Set();
     globalAudios.forEach(item => {
-        item.tags.forEach(t => {
-            if(t.toLowerCase() !== 'untagged') tagsSet.add(t.toLowerCase());
-        });
+        item.tags.forEach(t => { if(t.toLowerCase() !== 'untagged') tagsSet.add(t.toLowerCase()); });
     });
 
     let html = `<button class="filter-pill active" data-tag="all">All</button>`;
-    tagsSet.forEach(tag => {
-        html += `<button class="filter-pill" data-tag="${tag}">${tag}</button>`;
-    });
-    
+    tagsSet.forEach(tag => html += `<button class="filter-pill" data-tag="${tag}">${tag}</button>`);
     filterBar.innerHTML = html;
 
     document.querySelectorAll('.filter-pill').forEach(btn => {
@@ -263,10 +291,7 @@ function renderFilters() {
 function renderAudios(filterTag) {
     const container = document.getElementById('audioContainer');
     container.innerHTML = '';
-
-    const filtered = filterTag === 'all' 
-        ? globalAudios 
-        : globalAudios.filter(a => a.tags.map(t=>t.toLowerCase()).includes(filterTag));
+    const filtered = filterTag === 'all' ? globalAudios : globalAudios.filter(a => a.tags.map(t=>t.toLowerCase()).includes(filterTag));
 
     if (filtered.length === 0) {
         container.innerHTML = '<p class="loading-text">No audios found.</p>';
@@ -282,16 +307,12 @@ function renderAudios(filterTag) {
             ? `<img src="${audio.coverUrl}" class="audio-cover" alt="Cover">` 
             : `<div class="audio-cover fallback-cover">❀</div>`;
 
-        // Injects Admin Controls if the portal is unlocked
-        let adminHtml = '';
-        if (isAdminUnlocked) {
-            adminHtml = `
-                <div class="admin-controls">
-                    <button class="admin-btn edit-btn" data-id="${audio.id}">Edit</button>
-                    <button class="admin-btn delete-btn" data-id="${audio.id}">Delete</button>
-                </div>
-            `;
-        }
+        let adminHtml = isAdminUnlocked ? `
+            <div class="admin-controls">
+                <button class="admin-btn edit-btn" data-id="${audio.id}">Edit</button>
+                <button class="admin-btn delete-btn" data-id="${audio.id}">Delete</button>
+            </div>
+        ` : '';
 
         div.innerHTML = `
             <div class="audio-header">
@@ -309,7 +330,6 @@ function renderAudios(filterTag) {
         container.appendChild(div);
     });
 
-    // Attach logic to the newly rendered Edit & Delete buttons
     if (isAdminUnlocked) {
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -319,7 +339,6 @@ function renderAudios(filterTag) {
                     document.getElementById('editId').value = track.id;
                     document.getElementById('editTitle').value = track.title;
                     document.getElementById('editTags').value = track.tags.join(', ');
-                    document.getElementById('editStatus').innerText = '';
                     document.getElementById('editModal').style.display = 'flex';
                 }
             });
@@ -328,7 +347,7 @@ function renderAudios(filterTag) {
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = parseInt(e.target.dataset.id);
-                if (confirm("Are you sure you want to remove this track from the archive?")) {
+                if (confirm("Remove this track from the archive?")) {
                     e.target.innerText = "Deleting...";
                     try {
                         const res = await fetch('/api/delete', {
@@ -339,7 +358,6 @@ function renderAudios(filterTag) {
                         if (!res.ok) throw new Error("Delete failed");
                         loadAudios();
                     } catch (error) {
-                        alert(error.message);
                         e.target.innerText = "Delete";
                     }
                 }
